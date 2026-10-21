@@ -10,7 +10,7 @@ import { Send, Play } from "lucide-react"
 
 export default function SecondaryNav() {
   const router = useRouter();
-  const { lang, setLang } = useLanguage();
+  const { lang } = useLanguage();
 
   const navigate = (location: string) => {
     router.push(location);
@@ -37,31 +37,6 @@ export default function SecondaryNav() {
 
         <div className="flex flex-col items-start md:items-end gap-3 shrink-0">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-1 p-1 bg-slate-900/95 border border-slate-800 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setLang("th")}
-                className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors whitespace-nowrap shrink-0 ${
-                  lang === "th"
-                    ? "bg-amber-500 text-slate-950 shadow-sm"
-                    : "text-slate-300 hover:text-slate-100"
-                }`}
-              >
-                ไทย (TH)
-              </button>
-              <button
-                type="button"
-                onClick={() => setLang("en")}
-                className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors whitespace-nowrap shrink-0 ${
-                  lang === "en"
-                    ? "bg-amber-500 text-slate-950 shadow-sm"
-                    : "text-slate-300 hover:text-slate-100"
-                }`}
-              >
-                ENG (EN)
-              </button>
-            </div>
-
             <button
               onClick={() => navigate("/play-online")}
               className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition-colors whitespace-nowrap shrink-0 shadow-lg shadow-emerald-500/10"

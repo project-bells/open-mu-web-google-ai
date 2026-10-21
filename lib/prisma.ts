@@ -142,10 +142,10 @@ function createMockModel(modelName: string) {
 
 function createSafePrisma(): PrismaClient {
   let rawClient: any = null;
-  // Only attempt real PrismaClient if DATABASE_URL points to a Cloud SQL socket
-  if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes("/cloudsql/")) {
+  if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== "") {
     try {
       rawClient = globalForPrisma.prisma || new PrismaClient();
+      if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = rawClient;
     } catch {
       rawClient = null;
     }
