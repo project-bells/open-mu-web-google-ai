@@ -20,7 +20,7 @@ export default function Register() {
             toast.error(lang === "th" ? "รหัสผ่านทั้งสองช่องไม่ตรงกัน" : "The passwords must coincide")
             return;
         }
-        const response = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/account/register`, {
+        const response = await fetch("/api/account/register", {
         method: "POST",
         headers : {
             "Content-Type": "application/json"

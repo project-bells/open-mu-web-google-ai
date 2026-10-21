@@ -12,31 +12,30 @@ export default function OnlinePlayers() {
     const [characters, setCharacters] = useState<CharacterOnline[]>([])
     const { lang } = useLanguage();
 
-    //call the online player api to see how many players there are on
     useEffect(() => {
         const fetchData = async () => {
           try {
-            const status = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/status`);
-            if(status.ok){
+            const status = await fetch("/api/status");
+            if (status.ok) {
               const serverStatus = await status.json();
-              const result = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/characters/ranking/online`, {
+              const result = await fetch("/api/characters/ranking/online", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(serverStatus)
-              })
+              });
               const final = await result.json();
-              setCharacters(Array.isArray(final) ? final : [])
+              setCharacters(Array.isArray(final) ? final : []);
             } else {
-              toast.error("There was a problem trying to find the online users. Try again later.")
+              toast.error(lang === "th" ? "ไม่สามารถตรวจสอบรายชื่อผู้เล่นออนไลน์ได้ในขณะนี้" : "There was a problem trying to find the online users. Try again later.");
             }    
           } catch (e) {
-            toast.error("There was a problem! Try again later")
+            toast.error(lang === "th" ? "เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง" : "There was a problem! Try again later");
           }
         }
         fetchData()
-    },[])
+    }, [lang])
 
   return (
     <div className="w-full rounded-xl bg-slate-950/60 border border-slate-800/80 overflow-hidden">

@@ -25,9 +25,8 @@ export default function AddStatsCard({characterEdit}: {characterEdit: CharacterE
     //dl codes that are gonna be cked toshow leadership or not
     const dlCodes = ["00000040-0011-0000-0000-000000000000", "00000040-0010-0000-0000-000000000000"]
 
-    //send the request to add points
     async function addStats(){
-        const response = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/characters/addstats`, {
+        const response = await fetch("/api/characters/addstats", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

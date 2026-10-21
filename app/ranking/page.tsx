@@ -11,12 +11,6 @@ export default function Ranking() {
   const [selectedRanking, setSelectedRanking] = useState<string>('topLevel')
   const { lang } = useLanguage();
 
-  //on clicke cheanges the current ranking showing
-  const changeRanking = (event: SyntheticEvent) => {
-    const id = (event.target as HTMLElement).id;
-    setSelectedRanking(id);
-  }
-
   const tabs = [
     { id: "topLevel", label: lang === "th" ? "อันดับตัวละคร" : "Top Characters" },
     { id: "topKillers", label: lang === "th" ? "อันดับนักล่า (PK)" : "Top Killers" },
@@ -43,7 +37,8 @@ export default function Ranking() {
             <button
               key={tab.id}
               id={tab.id}
-              onClick={changeRanking}
+              type="button"
+              onClick={() => setSelectedRanking(tab.id)}
               className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors whitespace-nowrap shrink-0 ${
                 selectedRanking === tab.id
                   ? "bg-amber-500 text-slate-950 shadow-sm"

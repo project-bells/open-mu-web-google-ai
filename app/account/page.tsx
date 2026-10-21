@@ -18,11 +18,10 @@ export default function Account() {
         setLoginName(session?.user.username!)
     }
 
-    //request to change password
     async function changePassword(e: React.MouseEvent<HTMLElement>){
         e.preventDefault()
         await setName();
-        const result = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/account/changepassword`, {
+        const result = await fetch("/api/account/changepassword", {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json"

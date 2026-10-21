@@ -12,19 +12,19 @@ export default function TopGuilds() {
   const [mousePosition, setMousePosition] = useState({x: 0, y:0});
   const { lang } = useLanguage();
 
-  //calls the tp guild api
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/guilds`);
+        const response = await fetch("/api/guilds");
+        if (!response.ok) throw new Error("Failed to fetch");
         const res = await response.json();
         setGuilds(Array.isArray(res) ? res : []);
       } catch (e) {
-        toast.error("There was a problem! Try again later")
+        toast.error(lang === "th" ? "เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง" : "There was a problem! Try again later");
       }
     }
     fetchData();
-  }, [])    
+  }, [lang])    
 
   function handleMouseEnter(i: number, event: React.MouseEvent) {
     setCurrentShowingGuild(i);

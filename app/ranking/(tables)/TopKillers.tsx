@@ -13,19 +13,19 @@ export default function TopKillers() {
   const [characters, setCharacters] = useState<Character[]>([])
   const { lang } = useLanguage();
 
-  //calls the top killers api
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/characters/ranking/killers`);
+        const response = await fetch("/api/characters/ranking/killers");
+        if (!response.ok) throw new Error("Failed to fetch");
         const res = await response.json();
         setCharacters(Array.isArray(res) ? res : []);
       } catch (e) {
-        toast.error("There was a problem! Try again later")
+        toast.error(lang === "th" ? "เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง" : "There was a problem! Try again later");
       }
     }
     fetchData();
-  }, [])
+  }, [lang])
 
   return (
     <div className="w-full rounded-xl bg-slate-950/60 border border-slate-800/80 overflow-hidden">

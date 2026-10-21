@@ -14,7 +14,7 @@ export default function ServerStatistics() {
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const fetchData = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/status`);
+        const fetchData = await fetch("/api/status");
         if (fetchData.ok) {
           setStatus(await fetchData.json())
         }

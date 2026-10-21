@@ -20,7 +20,7 @@ export default function AddNews() {
 
     async function addNews(e: React.MouseEvent<HTMLElement>) {
         e.preventDefault();
-        const request = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/admin/news`, {
+        const request = await fetch("/api/admin/news", {
             method: "POST",
             body: JSON.stringify({title, body})
         })

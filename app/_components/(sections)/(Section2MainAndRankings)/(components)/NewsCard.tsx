@@ -58,7 +58,7 @@ export default function NewsCard({news, shortVersion} : {news: NewsComplete, sho
     },[])
 
     async function deleteNews(){
-      const request = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/admin/news/`+news.id, {
+      const request = await fetch("/api/admin/news/" + news.id, {
         method: "DELETE"
       });
       const result = await request.json();

@@ -12,19 +12,19 @@ export default function TopPlayers() {
   const [characters, setCharacters]= useState<CharacterRanking[]>([])
   const { lang } = useLanguage();
 
-  //cals the top players api
   useEffect(() => {
     async function fetchData() {
-      try{
-        const response = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/characters/ranking/reset`);
+      try {
+        const response = await fetch("/api/characters/ranking/reset");
+        if (!response.ok) throw new Error("Failed to fetch");
         const res = await response.json();
         setCharacters(Array.isArray(res) ? res : []);
-      }catch (e) {
-        toast.error("There was a problem! Try again later")
+      } catch (e) {
+        toast.error(lang === "th" ? "เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง" : "There was a problem! Try again later");
       }
     }
     fetchData();
-  }, [])
+  }, [lang])
 
   return (
     <div className="w-full rounded-xl bg-slate-950/60 border border-slate-800/80 overflow-hidden">

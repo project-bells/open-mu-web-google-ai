@@ -15,9 +15,8 @@ export async function GET(req: NextRequest,{ params } : { params : { guildName: 
                 Character: true
             }
         })
-        //check if guilds exists
         if(guildMembers.length === 0){
-            return NextResponse.json({messasge: "Guild wasn't found"}, {status: 400})
+            return NextResponse.json([], {status: 200})
         }
         //map to GuildMember[]
         const gmMapped: GuildMember[] = guildMembers.map(gm => {

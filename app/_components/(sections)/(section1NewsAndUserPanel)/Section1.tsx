@@ -11,10 +11,10 @@ export default async function Section1() {
 
   return (
     <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-      <div className="lg:col-span-8 w-full min-h-[320px] sm:min-h-[360px]">
+      <div className="lg:col-span-8 w-full h-[320px] sm:h-[380px]">
         <Banners />
       </div>
-      <div className="lg:col-span-4 w-full flex flex-col justify-center rounded-xl bg-slate-950/70 border border-slate-800/80 p-6">
+      <div className="lg:col-span-4 w-full h-[320px] sm:h-[380px] flex flex-col justify-center rounded-xl bg-slate-950/70 border border-slate-800/80 p-6 overflow-y-auto">
         {!isLogged && <LoginForm />}
         {isLogged && <UserPanel role={session.user.role}/>}
       </div>

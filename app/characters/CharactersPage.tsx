@@ -39,9 +39,8 @@ export default function CharactersPage({result}: {result: CharacterEdit[]}) {
     }
 
     const router = useRouter();
-    //request the reset of the character
     async function resetCharacter(name: string, clasId: string){
-        const response = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/characters/reset`, {
+        const response = await fetch("/api/characters/reset", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -62,7 +61,7 @@ export default function CharactersPage({result}: {result: CharacterEdit[]}) {
 
     //request pk clear of character
     async function pkClear(name: string){
-        const response = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/characters/pkclear`,{
+        const response = await fetch("/api/characters/pkclear",{
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -81,7 +80,7 @@ export default function CharactersPage({result}: {result: CharacterEdit[]}) {
 
     //request reset stats of character
     async function resetStats(name: string, clasId: string) {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/characters/resetStats`, {
+        const response = await fetch("/api/characters/resetStats", {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json"

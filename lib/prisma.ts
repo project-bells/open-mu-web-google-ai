@@ -34,9 +34,15 @@ const mockStore: Record<string, any[]> = {
     { Name: "Vanguard", Score: 490 },
   ],
   guildMember: [
-    { Status: 2, Character: { Name: "DarkLord" }, Guild: { Name: "Olympus" } },
-    { Status: 0, Character: { Name: "BladeMaster" }, Guild: { Name: "Olympus" } },
+    { Status: 2, Character: { Name: "Aetherius" }, Guild: { Name: "Olympus" } },
+    { Status: 1, Character: { Name: "BladeMaster" }, Guild: { Name: "Olympus" } },
     { Status: 0, Character: { Name: "GrandWizard" }, Guild: { Name: "Olympus" } },
+    { Status: 2, Character: { Name: "Sovereign" }, Guild: { Name: "Titans" } },
+    { Status: 0, Character: { Name: "IronFist" }, Guild: { Name: "Titans" } },
+    { Status: 2, Character: { Name: "Sylvanas" }, Guild: { Name: "Valkyrie" } },
+    { Status: 0, Character: { Name: "Freya" }, Guild: { Name: "Valkyrie" } },
+    { Status: 2, Character: { Name: "ArcaneSM" }, Guild: { Name: "Aethelgard" } },
+    { Status: 2, Character: { Name: "Valerius" }, Guild: { Name: "Vanguard" } },
   ],
   account: [],
   character: [],
@@ -98,7 +104,18 @@ function createMockModel(modelName: string) {
     return mockStore[modelName];
   };
   return {
-    findMany: async () => getList(),
+    findMany: async ({ where }: any = {}) => {
+      const list = getList();
+      if (!where) return list;
+      if (modelName === "guildMember" && where?.Guild?.Name) {
+        return list.filter((item) => item?.Guild?.Name === where.Guild.Name);
+      }
+      if (modelName === "character" && where?.Name?.in) {
+        const names: string[] = Array.isArray(where.Name.in) ? where.Name.in : [];
+        return list.filter((item) => names.includes(item.Name));
+      }
+      return list;
+    },
     findFirst: async ({ where }: any = {}) => {
       const list = getList();
       if (!where) return list[0] ?? null;
@@ -140,9 +157,14 @@ function createMockModel(modelName: string) {
   };
 }
 
+let dbConnectionFailed = false;
+
 function createSafePrisma(): PrismaClient {
   let rawClient: any = null;
-  if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== "") {
+  const dbUrl = process.env.DATABASE_URL?.trim() || "";
+  // Skip default placeholder localhost:5432/openmu with testz password if not configured
+  const isDefaultPlaceholder = dbUrl === "postgresql://postgres:testz@localhost:5432/openmu";
+  if (dbUrl !== "" && !isDefaultPlaceholder) {
     try {
       rawClient = globalForPrisma.prisma || new PrismaClient();
       if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = rawClient;
@@ -156,11 +178,11 @@ function createSafePrisma(): PrismaClient {
       if (prop === "then") return undefined;
       if (prop === "$queryRaw" || prop === "$executeRaw") {
         return async (...args: any[]) => {
-          if (rawClient) {
+          if (rawClient && !dbConnectionFailed) {
             try {
               return await rawClient[prop](...args);
             } catch {
-              // Fall through to mock query handler
+              dbConnectionFailed = true;
             }
           }
           const queryText = Array.isArray(args[0]) ? args[0].join(" ") : String(args[0] || "");
@@ -175,10 +197,11 @@ function createSafePrisma(): PrismaClient {
       }
       if (prop === "$transaction") {
         return async (ops: any) => {
-          if (rawClient) {
+          if (rawClient && !dbConnectionFailed) {
             try {
               return await rawClient.$transaction(ops);
             } catch {
+              dbConnectionFailed = true;
               return Array.isArray(ops) ? Promise.all(ops) : [];
             }
           }
@@ -190,16 +213,20 @@ function createSafePrisma(): PrismaClient {
       }
 
       const mockModel = createMockModel(prop);
-      if (!rawClient || !rawClient[prop]) {
+      if (!rawClient || !rawClient[prop] || dbConnectionFailed) {
         return mockModel;
       }
 
       return new Proxy(mockModel, {
         get(target: any, method: string) {
           return async (...args: any[]) => {
+            if (dbConnectionFailed) {
+              return target[method] ? await target[method](...args) : null;
+            }
             try {
               return await rawClient[prop][method](...args);
             } catch {
+              dbConnectionFailed = true;
               return target[method] ? await target[method](...args) : null;
             }
           };

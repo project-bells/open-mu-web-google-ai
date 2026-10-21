@@ -15,14 +15,15 @@ export default function GuildPopUp({guildName, style} : {guildName: string, styl
         : { 0: "Member", 1: "Battle Master", 2: "Guild Master" };
 
     useEffect(() => {
-        const fetchData = async() => {         
-            //call the api to find all the guild info(member/gm/...)
-            const result = await fetch(`${process.env.NEXT_PUBLIC_URL || ""}/api/guilds/`+guildName);
-            if(result.ok){
-                const data: [] = await result.json();
-                setGuildMembers(data.reverse());
-            } else {
-                toast.error("There was en error!")
+        const fetchData = async() => {
+            try {
+                const result = await fetch("/api/guilds/" + encodeURIComponent(guildName));
+                if (result.ok) {
+                    const data = await result.json();
+                    setGuildMembers(Array.isArray(data) ? [...data].reverse() : []);
+                }
+            } catch {
+                setGuildMembers([]);
             }
         }
         fetchData();
