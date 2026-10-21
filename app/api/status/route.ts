@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(){
     try{
         if (!process.env.GAMESERVER_URL) {
             return NextResponse.json({ state: "Online", players: 0, playersList: [] }, { status: 200 });
         }
-        const result = await fetch(`${process.env.GAMESERVER_URL}/api/status`, {next: {revalidate: 0}});
+        const apiKey = process.env.GAMESERVER_API_KEY;
+        const result = await fetch(`${process.env.GAMESERVER_URL}/api/status`, {
+            cache: "no-store",
+            headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : undefined,
+        });
         if(result.ok){
-            const res = await result.json();
-            return NextResponse.json(res, {status: 201});
+            const response = await result.json();
+            const status = typeof response === "string" ? JSON.parse(response) : response;
+            return NextResponse.json(status, {status: 200});
         } else {
             return NextResponse.json({ state: "Offline", players: 0, playersList: [] }, {status: 200});
         }
