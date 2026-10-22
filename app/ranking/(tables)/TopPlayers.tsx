@@ -15,7 +15,7 @@ export default function TopPlayers() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch("/api/characters/ranking/reset");
+        const response = await fetch("/api/characters/ranking/reset", { cache: "no-store" });
         if (!response.ok) throw new Error("Failed to fetch");
         const res = await response.json();
         setCharacters(Array.isArray(res) ? res : []);

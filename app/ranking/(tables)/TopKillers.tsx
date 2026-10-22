@@ -16,7 +16,7 @@ export default function TopKillers() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch("/api/characters/ranking/killers");
+        const response = await fetch("/api/characters/ranking/killers", { cache: "no-store" });
         if (!response.ok) throw new Error("Failed to fetch");
         const res = await response.json();
         setCharacters(Array.isArray(res) ? res : []);

@@ -15,7 +15,7 @@ export default function TopGuilds() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch("/api/guilds");
+        const response = await fetch("/api/guilds", { cache: "no-store" });
         if (!response.ok) throw new Error("Failed to fetch");
         const res = await response.json();
         setGuilds(Array.isArray(res) ? res : []);

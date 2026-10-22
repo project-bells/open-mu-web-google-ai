@@ -218,82 +218,13 @@ function createMockModel(modelName: string) {
   };
 }
 
-let dbConnectionFailed = false;
+/**
+ * Production data must always come from the configured OpenMU database.
+ * Database errors are intentionally allowed to surface instead of silently
+ * replacing live data with the bundled preview records above.
+ */
+export const prisma = globalForPrisma.prisma || new PrismaClient();
 
-function createSafePrisma(): PrismaClient {
-  let rawClient: any = null;
-  const dbUrl = process.env.DATABASE_URL?.trim() || "";
-  const isDefaultPlaceholder = dbUrl === "postgresql://postgres:testz@localhost:5432/openmu";
-  if (dbUrl !== "" && !isDefaultPlaceholder) {
-    try {
-      rawClient = globalForPrisma.prisma || new PrismaClient();
-      if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = rawClient;
-    } catch {
-      rawClient = null;
-    }
-  }
-
-  return new Proxy({} as PrismaClient, {
-    get(_, prop: string) {
-      if (prop === "then") return undefined;
-      if (prop === "$queryRaw" || prop === "$executeRaw") {
-        return async (...args: any[]) => {
-          if (rawClient && !dbConnectionFailed) {
-            try {
-              return await rawClient[prop](...args);
-            } catch {
-              dbConnectionFailed = true;
-            }
-          }
-          const queryText = Array.isArray(args[0]) ? args[0].join(" ") : String(args[0] || "");
-          if (queryText.includes("WHERE a.\"LoginName\"")) {
-            return getMockAccountCharacters();
-          }
-          if (queryText.includes("ORDER BY resets DESC") || queryText.includes("PlayerKillCount")) {
-            return mockTopCharacters;
-          }
-          return [];
-        };
-      }
-      if (prop === "$transaction") {
-        return async (ops: any) => {
-          if (rawClient && !dbConnectionFailed) {
-            try {
-              return await rawClient.$transaction(ops);
-            } catch {
-              dbConnectionFailed = true;
-              return Array.isArray(ops) ? Promise.all(ops) : [];
-            }
-          }
-          return Array.isArray(ops) ? Promise.all(ops) : [];
-        };
-      }
-      if (prop === "$connect" || prop === "$disconnect") {
-        return async () => {};
-      }
-
-      const mockModel = createMockModel(prop);
-      if (!rawClient || !rawClient[prop] || dbConnectionFailed) {
-        return mockModel;
-      }
-
-      return new Proxy(mockModel, {
-        get(target: any, method: string) {
-          return async (...args: any[]) => {
-            if (dbConnectionFailed) {
-              return target[method] ? await target[method](...args) : null;
-            }
-            try {
-              return await rawClient[prop][method](...args);
-            } catch {
-              dbConnectionFailed = true;
-              return target[method] ? await target[method](...args) : null;
-            }
-          };
-        },
-      });
-    },
-  });
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
 }
-
-export const prisma = createSafePrisma();

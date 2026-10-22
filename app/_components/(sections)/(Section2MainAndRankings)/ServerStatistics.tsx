@@ -14,7 +14,7 @@ export default function ServerStatistics() {
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const fetchData = await fetch("/api/status");
+        const fetchData = await fetch("/api/status", { cache: "no-store" });
         if (fetchData.ok) {
           setStatus(await fetchData.json())
         }

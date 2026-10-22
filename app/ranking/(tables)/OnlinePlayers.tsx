@@ -15,7 +15,7 @@ export default function OnlinePlayers() {
     useEffect(() => {
         const fetchData = async () => {
           try {
-            const status = await fetch("/api/status");
+            const status = await fetch("/api/status", { cache: "no-store" });
             if (status.ok) {
               const serverStatus = await status.json();
               const result = await fetch("/api/characters/ranking/online", {
