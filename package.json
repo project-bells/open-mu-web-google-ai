@@ -5,7 +5,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000 -H 0.0.0.0",
+    "postinstall": "prisma generate",
+    "dev": "prisma generate && next dev -p 3000 -H 0.0.0.0",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint"

@@ -1,26 +1,40 @@
-import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
-import {getServerSession} from "next-auth"
-import CharactersPage from "./CharactersPage"
-import { CharacterEdit } from "../_models/characterEdit"
+import { authOptions } from "@/lib/auth";
+import { getMockAccountCharacters, prisma } from "@/lib/prisma";
+import { getSiteConfig } from "@/lib/siteConfig";
+import { getServerSession } from "next-auth";
+import CharactersPage from "./CharactersPage";
+import { CharacterEdit } from "../_models/characterEdit";
+
+export const dynamic = "force-dynamic";
 
 export default async function CharactersMenu() {
-    //get the current session and collec all information, characters.... then pass it to CharactersPage
-    const session = await getServerSession(authOptions)
-    let final: CharacterEdit[] = [];
-    if(session?.user.username){
-        final = await getStatistics(session?.user.username)
-    } 
+  const session = await getServerSession(authOptions);
+  const config = getSiteConfig();
+  let final: CharacterEdit[] = [];
+
+  if (session?.user?.username) {
+    try {
+      final = await getStatistics(session.user.username);
+    } catch {
+      final = [];
+    }
+    if (!final || final.length === 0) {
+      final = getMockAccountCharacters();
+    }
+  }
 
   return (
     <>
-        {<CharactersPage result={final}/>}
+      <CharactersPage
+        result={final}
+        initialSettings={config.characterSettings}
+      />
     </>
-  )
+  );
 }
 
 async function getStatistics(characterId: string): Promise<CharacterEdit[]> {
-    const result: CharacterEdit[] = await prisma.$queryRaw`SELECT
+  const result: CharacterEdit[] = await prisma.$queryRaw`SELECT
         c."Name" as "name",
         c."CharacterClassId" as "characterClassId",
         c."LevelUpPoints" as "levelUpPoints",
@@ -47,18 +61,6 @@ async function getStatistics(characterId: string): Promise<CharacterEdit[]> {
         '01b0ef28-f7a0-46b5-97ba-2b624a54cd75',
         '6af2c9df-3ae4-4721-8462-9a8ec7f56fe4'
         )
-    GROUP BY c."Name", c."CharacterClassId", c."LevelUpPoints", c."MasterLevelUpPoints";`
-    return result;
+    GROUP BY c."Name", c."CharacterClassId", c."LevelUpPoints", c."MasterLevelUpPoints";`;
+  return result;
 }
-
-
-
-/* const definitionsId = [
-    "89a891a7-f9f9-4ab5-af36-12056e53a5f7", //resets
-    "560931ad-0901-4342-b7f4-fd2e2fcc0563", //level 
-    "70cd8c10-391a-4c51-9aa4-a854600e3a9f", //master level 
-    "123282fe-fead-448e-ad2c-baece939b4b1", //str base 
-    "1ae9c014-e3cd-4703-bd05-1b65f5f94ceb", //agi base 
-    "6ca5c3a6-b109-45a5-87a7-fdcb107b4982", //vitality base 
-    "01b0ef28-f7a0-46b5-97ba-2b624a54cd75" //energy base 
-] */

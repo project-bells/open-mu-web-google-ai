@@ -1,31 +1,50 @@
 import { PrismaClient } from "@prisma/client";
+import { getSiteConfig, saveSiteConfig } from "./siteConfig";
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const globalForPrisma = global as unknown as {
+  prisma: PrismaClient;
+  mockAccountChars: any[];
+};
+
+const defaultAccountCharacters = [
+  {
+    name: "AdminDK",
+    characterClassId: "00000040-0007-0000-0000-000000000000",
+    levelUpPoints: 1500,
+    masterLevelUpPoints: 50,
+    resets: 12,
+    lvl: 400,
+    masterlvl: 120,
+    strength: 3500,
+    agility: 2800,
+    vitality: 2000,
+    energy: 1500,
+    leadership: 0,
+  },
+  {
+    name: "AdminDL",
+    characterClassId: "00000040-0011-0000-0000-000000000000",
+    levelUpPoints: 2000,
+    masterLevelUpPoints: 80,
+    resets: 8,
+    lvl: 400,
+    masterlvl: 95,
+    strength: 2500,
+    agility: 2200,
+    vitality: 1800,
+    energy: 1500,
+    leadership: 2000,
+  },
+];
+
+export function getMockAccountCharacters() {
+  if (!globalForPrisma.mockAccountChars) {
+    globalForPrisma.mockAccountChars = defaultAccountCharacters.map((c) => ({ ...c }));
+  }
+  return globalForPrisma.mockAccountChars;
+}
 
 const mockStore: Record<string, any[]> = {
-  openMuWeb_News: [
-    {
-      id: "00000000-0000-4000-8000-000000000001",
-      title: "เปิดให้บริการเซิร์ฟเวอร์ Mu Origisns S6E3 อย่างเป็นทางการ",
-      body: "เซิร์ฟเวอร์ Mu Origisns S6E3 พร้อมเปิดให้บริการแล้ววันนี้! สมัครสมาชิก ดาวน์โหลดตัวเกมตัวเต็ม และเข้าร่วมการผจญภัยบนทวีป MU ได้ทันที อัตราคูณค่าประสบการณ์ x100 อัตราดรอปไอเทมยอดเยี่ยม (Excellent) 50% ในรูปแบบ Play2Win สมดุลทุกสายอาชีพ",
-      author: "Admin",
-      creationDate: new Date("2026-10-20T12:00:00Z"),
-    },
-    {
-      id: "00000000-0000-4000-8000-000000000002",
-      title: "ตารางการลงทะเบียนและศึกชิงปราสาท Castle Siege",
-      body: "หัวหน้ากิลด์สามารถลงทะเบียนและส่งมอบ Sign of Lord สำหรับศึกชิงปราสาท Valley of Loren ที่กำลังจะมาถึงได้แล้ว รวบรวมพันธมิตรของคุณ ป้องกันห้องบัลลังก์ และชิงสิทธิ์เข้าใช้งาน Lord Mix พร้อมเกียรติยศสูงสุดประจำเซิร์ฟเวอร์",
-      author: "Admin",
-      creationDate: new Date("2026-10-18T15:30:00Z"),
-    },
-    {
-      id: "00000000-0000-4000-8000-000000000003",
-      title: "อัปเดตสมดุลปราสาทเลือด (Blood Castle) และลานปีศาจ (Devil Square)",
-      body: "ปรับความหนาแน่นของมอนสเตอร์และอัตราดรอปเพชร Jewel of Bless ใน Blood Castle ชั้น 7 และ Devil Square ชั้น 6 เพื่อให้คุ้มค่ากับการเล่นเป็นปาร์ตี้มากยิ่งขึ้น โบนัสค่าประสบการณ์ปาร์ตี้เพิ่มขึ้นสูงสุดถึง 50% เมื่อครบปาร์ตี้ 5 คน",
-      author: "Admin",
-      creationDate: new Date("2026-10-15T09:00:00Z"),
-    },
-  ],
   guild: [
     { Name: "Olympus", Score: 1250 },
     { Name: "Titans", Score: 980 },
@@ -100,19 +119,32 @@ const mockTopCharacters = [
 
 function createMockModel(modelName: string) {
   const getList = () => {
+    if (modelName === "openMuWeb_News") {
+      return getSiteConfig().news.map((n) => ({
+        ...n,
+        creationDate: new Date(n.creationDate),
+      }));
+    }
     if (!mockStore[modelName]) mockStore[modelName] = [];
     return mockStore[modelName];
   };
   return {
-    findMany: async ({ where }: any = {}) => {
-      const list = getList();
-      if (!where) return list;
-      if (modelName === "guildMember" && where?.Guild?.Name) {
-        return list.filter((item) => item?.Guild?.Name === where.Guild.Name);
+    findMany: async ({ where, skip, take }: any = {}) => {
+      let list = getList();
+      if (where) {
+        if (modelName === "guildMember" && where?.Guild?.Name) {
+          list = list.filter((item) => item?.Guild?.Name === where.Guild.Name);
+        }
+        if (modelName === "character" && where?.Name?.in) {
+          const names: string[] = Array.isArray(where.Name.in) ? where.Name.in : [];
+          list = list.filter((item) => names.includes(item.Name));
+        }
       }
-      if (modelName === "character" && where?.Name?.in) {
-        const names: string[] = Array.isArray(where.Name.in) ? where.Name.in : [];
-        return list.filter((item) => names.includes(item.Name));
+      if (typeof skip === "number" && skip > 0) {
+        list = list.slice(skip);
+      }
+      if (typeof take === "number" && take > 0) {
+        list = list.slice(0, take);
       }
       return list;
     },
@@ -135,18 +167,47 @@ function createMockModel(modelName: string) {
       );
     },
     create: async ({ data }: any = {}) => {
-      const list = getList();
       const record = {
         id: "00000000-0000-4000-8000-" + String(Date.now()).slice(-12).padStart(12, "0"),
         creationDate: new Date(),
         ...data,
       };
+      if (modelName === "openMuWeb_News") {
+        const currentNews = getSiteConfig().news;
+        saveSiteConfig({
+          news: [
+            {
+              id: record.id,
+              title: record.title,
+              body: record.body,
+              author: record.author || "Admin",
+              creationDate: new Date().toISOString(),
+            },
+            ...currentNews,
+          ],
+        });
+        return record;
+      }
+      const list = getList();
       list.unshift(record);
       return record;
     },
-    update: async ({ data }: any = {}) => data ?? {},
+    update: async ({ where, data }: any = {}) => {
+      if (modelName === "openMuWeb_News" && where?.id) {
+        const currentNews = getSiteConfig().news.map((item) =>
+          item.id === where.id ? { ...item, ...data } : item
+        );
+        saveSiteConfig({ news: currentNews });
+      }
+      return data ?? {};
+    },
     updateMany: async ({ data }: any = {}) => ({ count: 1, ...data }),
     delete: async ({ where }: any = {}) => {
+      if (modelName === "openMuWeb_News" && where?.id) {
+        const currentNews = getSiteConfig().news.filter((item) => item.id !== where.id);
+        saveSiteConfig({ news: currentNews });
+        return {};
+      }
       const list = getList();
       if (where?.id) {
         mockStore[modelName] = list.filter((item) => item.id !== where.id);
@@ -162,7 +223,6 @@ let dbConnectionFailed = false;
 function createSafePrisma(): PrismaClient {
   let rawClient: any = null;
   const dbUrl = process.env.DATABASE_URL?.trim() || "";
-  // Skip default placeholder localhost:5432/openmu with testz password if not configured
   const isDefaultPlaceholder = dbUrl === "postgresql://postgres:testz@localhost:5432/openmu";
   if (dbUrl !== "" && !isDefaultPlaceholder) {
     try {
@@ -187,7 +247,7 @@ function createSafePrisma(): PrismaClient {
           }
           const queryText = Array.isArray(args[0]) ? args[0].join(" ") : String(args[0] || "");
           if (queryText.includes("WHERE a.\"LoginName\"")) {
-            return [];
+            return getMockAccountCharacters();
           }
           if (queryText.includes("ORDER BY resets DESC") || queryText.includes("PlayerKillCount")) {
             return mockTopCharacters;

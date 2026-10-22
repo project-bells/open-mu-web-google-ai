@@ -3,6 +3,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./prisma";
 import { compare } from "bcryptjs";
+import { getAdminPassword } from "./siteConfig";
 
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
@@ -15,12 +16,7 @@ export const authOptions: NextAuthOptions = {
     },
     providers: [
         CredentialsProvider({
-          // The name to display on the sign in form (e.g. "Sign in with...")
           name: "Credentials",
-          // `credentials` is used to generate a form on the sign in page.
-          // You can specify which fields should be submitted, by adding keys to the `credentials` object.
-          // e.g. domain, username, password, 2FA token, etc.
-          // You can pass any HTML attribute to the <input> tag through the object.
           credentials: {
             username: { label: "Username", type: "text", placeholder: "jsmith" },
             password: { label: "Password", type: "password" }
@@ -29,9 +25,21 @@ export const authOptions: NextAuthOptions = {
             if(!credentials?.username || !credentials?.password){
                 return null;
             }
+            const cleanUsername = credentials.username.trim();
+            if (cleanUsername.toLowerCase() === "admin") {
+                const adminPassword = getAdminPassword();
+                if (credentials.password === adminPassword) {
+                    return {
+                        id: "00000000-0000-0000-0000-000000000000",
+                        username: "admin",
+                        email: "admin@muorigins.local",
+                        role: "GAME_MASTER"
+                    };
+                }
+            }
             const existingUser = await prisma.account.findUnique({
                 where: {
-                    LoginName: credentials.username
+                    LoginName: cleanUsername
                 }
             })
             if(!existingUser) {

@@ -21,19 +21,30 @@ export default function LoginForm() {
     setPassword(e.target.value)
   }
 
-  //try to login
   async function login(e: React.MouseEvent<HTMLElement>) {
     e.preventDefault();
+    const cleanUser = username.trim();
     const signInData = await signIn("credentials", {
-      username: username,
+      username: cleanUser,
       password: password,
       redirect: false
     })
     if (signInData?.error) {
       toast.error(lang === "th" ? "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" : "Invalid Username or Password");
     } else {
-      router.refresh();
-      toast.success((lang === "th" ? "ยินดีต้อนรับกลับมา " : "Welcome back ") + username)
+      if (cleanUser.toLowerCase() === "admin") {
+        localStorage.setItem("role", "GAME_MASTER");
+        toast.success(
+          lang === "th"
+            ? "เข้าสู่ระบบผู้ดูแลระบบ (Admin) สำเร็จ"
+            : "Logged in as Administrator"
+        );
+        router.push("/admin");
+        router.refresh();
+      } else {
+        router.refresh();
+        toast.success((lang === "th" ? "ยินดีต้อนรับกลับมา " : "Welcome back ") + cleanUser);
+      }
     }
   }
 
@@ -44,7 +55,7 @@ export default function LoginForm() {
           {lang === "th" ? "เข้าสู่ระบบบัญชี" : "Account Login"}
         </h3>
         <p className="text-xs text-slate-400 mt-1">
-          {lang === "th" ? "เข้าสู่ระบบเพื่อจัดการตัวละครและอัพสเตตัส" : "Sign in to manage characters and stats"}
+          {lang === "th" ? "เข้าสู่ระบบเพื่อจัดการตัวละครและระบบแอดมิน" : "Sign in to manage characters and admin panel"}
         </p>
       </div>
 
@@ -55,8 +66,8 @@ export default function LoginForm() {
           </label>
           <input
             type="text"
-            minLength={4}
-            placeholder={lang === "th" ? "กรอกชื่อผู้ใช้" : "Enter username"}
+            minLength={1}
+            placeholder={lang === "th" ? "กรอกชื่อผู้ใช้ (เช่น admin)" : "Enter username"}
             className="w-full px-3.5 py-2.5 rounded-lg bg-slate-900 border border-slate-700/90 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-amber-400 invalid:border-red-500 transition-colors"
             onChange={sUsername}
             value={username}
@@ -69,7 +80,7 @@ export default function LoginForm() {
           </label>
           <input
             type="password"
-            minLength={4}
+            minLength={1}
             placeholder={lang === "th" ? "กรอกรหัสผ่าน" : "Enter password"}
             className="w-full px-3.5 py-2.5 rounded-lg bg-slate-900 border border-slate-700/90 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-amber-400 invalid:border-red-500 transition-colors"
             onChange={sPassword}
@@ -96,4 +107,3 @@ export default function LoginForm() {
     </form>
   )
 }
-

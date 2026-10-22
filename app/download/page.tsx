@@ -33,7 +33,7 @@ export default function Download() {
     ),
   });
 
-  useEffect(() => {
+  const loadDownloads = () => {
     fetch("/api/downloads", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -46,6 +46,12 @@ export default function Download() {
         });
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    loadDownloads();
+    window.addEventListener("site-config-updated", loadDownloads);
+    return () => window.removeEventListener("site-config-updated", loadDownloads);
   }, []);
 
   const gdLink = links.gd;
